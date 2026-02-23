@@ -124,6 +124,27 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+    
+    @classmethod
+    def get_total_count(cls):
+        """
+        Возвращает общее количество всех проектов
+        """
+        return cls.objects.count()
+    
+    @classmethod
+    def get_active_count(cls):
+        """
+        Возвращает количество доступных проектов (is_active=True)
+        """
+        return cls.objects.filter(is_active=True).count()
+    
+    @classmethod
+    def get_available_count(cls):
+        """
+        Возвращает количество доступных проектов со свободными местами
+        """
+        return cls.objects.filter(is_active=True, spots_remaining__gt=0).count()
 
 class ProjectListItem(models.Model):
     TYPES=[
