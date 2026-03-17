@@ -16,44 +16,61 @@ class FilterOptionInline(admin.TabularInline):
     fields = ("name",)
     show_change_link = True
 
-class CampusAdmin(admin.ModelAdmin):
-    list_display = ("name","abbreviation","metro_station")
-    search_fields = ("name","address","abbreviation")
-    list_filter = ("metro_station",)
-    ordering = ("name",)
-    fieldsets = ((None,{"fields":("name","abbreviation")}),("Контакты",{"fields":("address","metro_station"),"classes":("collapse",)}),)
 
 class PartnerAdmin(admin.ModelAdmin):
-    list_display = ("name","website","email","phone","internship")
-    search_fields = ("name","email","phone")
+    list_display = ("name", "website", "email", "phone", "internship", "projects_count")
+    search_fields = ("name", "email", "phone")
     list_filter = ("internship",)
     ordering = ("name",)
-    fieldsets = ((None,{"fields":("name","website")}),("Контакты",{"fields":("email","phone"),"classes":("collapse",)}),("Дополнительно",{"fields":("internship",),"classes":("collapse",)}),)
+    fieldsets = (
+        (None, {"fields": ("name", "website")}),
+        ("Контакты", {"fields": ("email", "phone"), "classes": ("collapse",)}),
+        ("Дополнительно", {"fields": ("internship",), "classes": ("collapse",)}),
+    )
+    def projects_count(self, obj):
+        return Project.objects.filter(partner=obj).count()
+    projects_count.short_description = "Проектов"
 
 class CuratorAdmin(admin.ModelAdmin):
-    list_display = ("first_name","last_name","email")
-    search_fields = ("first_name","last_name","email")
-    ordering = ("last_name","first_name")
+    list_display = ("first_name", "last_name", "email", "projects_count")
+    search_fields = ("first_name", "last_name", "email")
+    ordering = ("last_name", "first_name")
+    def projects_count(self, obj):
+        return Project.objects.filter(curator=obj).count()
+    projects_count.short_description = "Проектов"
 
 class FilterCategoryAdmin(admin.ModelAdmin):
-    list_display = ("name","category_type")
+    list_display = ("name", "category_type", "options_count")
     search_fields = ("name",)
     list_filter = ("category_type",)
-    inlines = [FilterOptionInline]
     ordering = ("name",)
+    inlines = [FilterOptionInline]
+    def options_count(self, obj):
+        return obj.options.count()
+    options_count.short_description = "Опций"
 
 class FilterOptionAdmin(admin.ModelAdmin):
-    list_display = ("name","category")
-    search_fields = ("name","category__name")
+    list_display = ("name", "category", "projects_count")
+    search_fields = ("name", "category__name")
     list_filter = ("category",)
     autocomplete_fields = ("category",)
-    ordering = ("category__name","name")
+    ordering = ("category__name", "name")
+    raw_id_fields = ("category",)
+    def projects_count(self, obj):
+        return (
+            obj.projects_as_theme.count() +
+            obj.projects_as_specialty.count() +
+            obj.projects_as_course.count() +
+            obj.projects_as_difficulty.count()
+        )
+    projects_count.short_description = "Проектов"
 
 class ScheduleItemAdmin(admin.ModelAdmin):
-    list_display = ("day_of_week","start_time","end_time","note")
+    list_display = ("day_of_week", "start_time", "end_time", "note")
     list_filter = ("day_of_week",)
     search_fields = ("note",)
-    ordering = ("day_of_week","start_time")
+    ordering = ("day_of_week", "start_time")
+    raw_id_fields = ()
 
 class CourseYearAdmin(admin.ModelAdmin):
     list_display = ("year",)
@@ -61,26 +78,74 @@ class CourseYearAdmin(admin.ModelAdmin):
     ordering = ("year",)
 
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("title","partner","curator","difficulty","spots_remaining","internship","is_active")
-    list_filter = ("is_active","internship","difficulty","campus","partner","curator")
-    search_fields = ("title","short_description","long_description")
-    autocomplete_fields = ("theme","campus","difficulty","partner","curator","specialties","courses")
-    list_editable = ("spots_remaining","internship","is_active")
+    list_display = (
+        "id",
+        "title",
+        "partner",
+        "curator",
+        "difficulty",
+        "spots_remaining",
+        "internship",
+        "is_active",
+    )
+    list_filter = (
+        "is_active",
+        "internship",
+        "difficulty",
+        "campus",
+        "partner",
+        "curator",
+    )
+    search_fields = (
+        "title",
+        "short_description",
+        "long_description",
+    )
+    raw_id_fields = ("theme", "campus", "difficulty", "partner", "curator")
+    autocomplete_fields = ("specialties", "courses")
+    list_editable = (
+        "spots_remaining",
+        "internship",
+        "is_active",
+    )
     ordering = ("-created_at",)
     inlines = [ProjectListItemInline]
-
     fieldsets = (
-        ("Основная информация",{"fields":("title","short_description","long_description")}),
-        ("Фильтры",{"fields":("theme","specialties","campus","courses","difficulty")}),
-        ("Партнёры и кураторы",{"fields":("partner","curator","internship")}),
-        ("Доступность",{"fields":("spots_remaining","is_active")}),
+        ("Основная информация", {
+            "fields": (
+                "title",
+                "short_description",
+                "long_description",
+            )
+        }),
+        ("Фильтры", {
+            "fields": (
+                "theme",
+                "specialties",
+                "campus",
+                "courses",
+                "difficulty",
+            )
+        }),
+        ("Партнёры и кураторы", {
+            "fields": (
+                "partner",
+                "curator",
+                "internship",
+            )
+        }),
+        ("Доступность", {
+            "fields": (
+                "spots_remaining",
+                "is_active",
+            )
+        }),
     )
 
-admin.site.register(Campus,CampusAdmin)
-admin.site.register(Partner,PartnerAdmin)
-admin.site.register(Curator,CuratorAdmin)
-admin.site.register(FilterCategory,FilterCategoryAdmin)
-admin.site.register(FilterOption,FilterOptionAdmin)
-admin.site.register(ScheduleItem,ScheduleItemAdmin)
-admin.site.register(CourseYear,CourseYearAdmin)
-admin.site.register(Project,ProjectAdmin)
+admin.site.register(Partner, PartnerAdmin)
+admin.site.register(Curator, CuratorAdmin)
+admin.site.register(FilterCategory, FilterCategoryAdmin)
+admin.site.register(FilterOption, FilterOptionAdmin)
+admin.site.register(ScheduleItem, ScheduleItemAdmin)
+admin.site.register(CourseYear, CourseYearAdmin)
+admin.site.register(Project, ProjectAdmin)
