@@ -5,6 +5,8 @@ from .models import Task, TaskCategory, TaskSkill
 class TaskCategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "slug")
     search_fields = ("name", "slug")
+    list_display_links = ("name",)
+    list_editable = ("slug",)
 
 
 class SkillInline(admin.TabularInline):
@@ -14,7 +16,7 @@ class SkillInline(admin.TabularInline):
 
 
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ("title", "project", "category", "points", "deadline", "difficulty", "status")
+    list_display = ("title", "deadline", "difficulty", "status")
     list_filter = ("status", "difficulty", "deadline")
     list_display_links = ("title",)
     search_fields = ("title", "project__title")
@@ -46,7 +48,6 @@ class TaskAdmin(admin.ModelAdmin):
                 "status"
             )
         }),
-        # Блок навыков через инлайн, fieldsets не нужен
     )
 
 

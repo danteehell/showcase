@@ -1,11 +1,10 @@
-from rest_framework.views import APIView
+from rest_framework  import views, viewsets
 from rest_framework.response import Response
 from .models import *
 from .serializers import *
-from django.shortcuts import get_object_or_404
 
 
-class ProjectListAPI(APIView):
+class ProjectListAPI(views.APIView):
     def get(self, request, format=None):
         projects = Project.objects.all()
 
@@ -66,23 +65,27 @@ class ProjectListAPI(APIView):
             'page': page,
         })
 
-class ProjectDetailAPI(APIView):
-    def get(self, reques, id, format=None):
-        project = get_object_or_404(Project, id=id)
-        serializer = ProjectSerializer(project)
-        return Response(serializer.data)
 
-class FiltersAPI(APIView):
-    def get(self, request, format=None):
-        categories = FilterCategory.objects.all().prefetch_related('options')
-        serializer = FilterCategorySerializer(categories, many=True)
-        data = {cat['category_type']: cat for cat in serializer.data}
+class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    lookup_field = 'id'
+
+
+class FiltersViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = FilterCategory.objects.all().prefetch_related('options')
+    serializer_class = FilterCategorySerializer
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        data = {cat['category_type']: cat for cat in response.data}
         return Response(data)
-    
 
-class PartnerAPI(APIView):
-    def get(self, request, format=None):
-        partners = Partner.objects.all()
-        serializer = PartnerSerializer(partners, many=True)
-        data = serializer.data
-        return Response({"data": data})
+
+class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Partner.objects.all()
+    serializer_class = PartnerSerializer
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        return Response({"data": response.data})
