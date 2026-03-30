@@ -20,24 +20,6 @@ class TaskCategory(models.Model):
         super().save(*args, **kwargs)
 
 
-class Skill(models.Model):
-    name = models.CharField(max_length=255, unique=True, verbose_name='Название навыка')
-    slug = models.SlugField(unique=True, blank=True, null=True, verbose_name='Slug')
-
-    class Meta:
-        verbose_name = 'Навык'
-        verbose_name_plural = 'Навыки'
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-
 class Task(models.Model):
 
     class Difficulty(models.TextChoices):
@@ -99,14 +81,6 @@ class Task(models.Model):
         verbose_name='Статус'
     )
 
-    skills = models.ManyToManyField(
-        'Skill',
-        through='TaskSkill',
-        related_name='tasks',
-        blank=True,
-        verbose_name='Навыки'
-    )
-
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
 
@@ -124,23 +98,20 @@ class Task(models.Model):
 
 
 class TaskSkill(models.Model):
-    task = models.ForeignKey(
-        Task,
-        on_delete=models.CASCADE,
-        related_name='task_skills',
-        verbose_name='Задача'
-    )
-    skill = models.ForeignKey(
-        Skill,
-        on_delete=models.CASCADE,
-        related_name='skill_tasks',
-        verbose_name='Навык'
-    )
+    class SkillLevel(models.TextChoices):
+        BEGINNER = 'beginner', 'Начальный'
+        INTERMEDIATE = 'intermediate', 'Средний'
+        ADVANCED = 'advanced', 'Продвинутый'
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='task_skills', verbose_name='Задача')
+    skill = models.CharField(max_length=250, verbose_name='Навык')
     level_required = models.CharField(
-        max_length=100,
+        max_length=20,
+        choices=SkillLevel.choices,
+        default=SkillLevel.BEGINNER,
+        verbose_name='Уровень',
         blank=True,
-        null=True,
-        verbose_name='Требуемый уровень'
+        null=True
     )
 
     class Meta:
