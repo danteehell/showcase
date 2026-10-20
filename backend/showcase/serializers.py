@@ -32,8 +32,10 @@ class ProjectSerializer(serializers.ModelSerializer):
         ]
     def get_curator(self, obj):
         if obj.curator:
-            return obj.curator.full_name()
-        else: return None
+            if obj.curator.first_name or obj.curator.last_name:
+                return f"{obj.curator.last_name} {obj.curator.first_name}".strip()
+            return obj.curator.username
+        return None
 
 class FilterOptionSerializer(serializers.ModelSerializer):
     class Meta:

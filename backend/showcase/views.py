@@ -1,8 +1,11 @@
-from rest_framework  import views, viewsets
+from rest_framework import views, viewsets
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from django.db.models import Count
+
 from .models import *
 from .serializers import *
-
+from users.permissions import IsAdminOrCurator, IsStudent
 
 class ProjectListAPI(views.APIView):
     def get(self, request, format=None):
@@ -66,10 +69,15 @@ class ProjectListAPI(views.APIView):
         })
 
 
-class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     lookup_field = 'id'
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminOrCurator()]
+        return [AllowAny()]
 
 
 class FiltersViewSet(viewsets.ReadOnlyModelViewSet):
@@ -88,5 +96,7 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PartnerSerializer
 
     def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        return Response({"data": response.data})
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"data": serializer.data})
+    

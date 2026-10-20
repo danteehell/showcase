@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from django.urls import reverse_lazy
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv   
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -34,6 +35,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
     "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -44,6 +46,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "showcase",
     "tasks",
+    "users",
 ]
 
 REST_FRAMEWORK = {
@@ -101,7 +104,7 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
+AUTH_USER_MODEL = 'users.User'
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -134,3 +137,101 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    Path(__file__).resolve().parent.parent / "static",
+]
+
+from django.templatetags.static import static
+
+UNFOLD = {
+    "SITE_TITLE": "Центр проектной деятельности",
+    "SITE_HEADER": "Управление проектами",
+    "SITE_URL": "/",
+    "SITE_LOGO": lambda request: static("images/logo.svg"), 
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "THEME": "light", 
+    
+    "SIDEBAR": {
+            "show_search": True,
+            "show_all_applications": False, 
+            "navigation": [
+                {
+                    "title": "Витрина проектов",
+                    "separator": True,
+                    "items": [
+                        {
+                            "title": "Проекты",
+                            "icon": "folder", 
+                            "link": reverse_lazy("admin:showcase_project_changelist"),
+                        },
+                        {
+                            "title": "Партнёры",
+                            "icon": "handshake",
+                            "link": reverse_lazy("admin:showcase_partner_changelist"),
+                        },
+                        {
+                            "title": "Фильтры",
+                            "icon": "filter_alt",
+                            "link": reverse_lazy("admin:showcase_filtercategory_changelist"),
+                        },
+                    ],
+                },
+                {
+                    "title": "Биржа задач",
+                    "separator": True,
+                    "items": [
+                        {
+                            "title": "Задачи",
+                            "icon": "task",
+                            "link": reverse_lazy("admin:tasks_task_changelist"),
+                        },
+                        {
+                            "title": "Категории задач",
+                            "icon": "category",
+                            "link": reverse_lazy("admin:tasks_taskcategory_changelist"),
+                        },
+                    ],
+                },
+            ],
+    },
+    "COLORS": {
+        "primary": {
+            "50": "240 245 255",
+            "100": "225 233 255",
+            "200": "197 211 254",
+            "300": "160 180 253",
+            "400": "120 145 252",
+            "500": "103 123 253",
+            "600": "80 95 230",
+            "700": "60 70 200",
+            "800": "40 50 160",
+            "900": "20 30 120",
+            "950": "16 51 112",
+        },
+        "base": {
+            "50": "248 251 255",
+            "100": "241 245 249",
+            "200": "226 232 240",
+            "300": "203 213 225",
+            "400": "148 163 184",
+            "500": "100 116 139",
+            "600": "71 85 105",
+            "700": "51 65 85",
+            "800": "30 41 59",
+            "900": "15 23 42",
+            "950": "2 6 23",
+        },
+        "success": {
+            "500": "0 214 129",
+        },
+        "danger": {
+            "500": "255 82 103",
+        },
+        "warning": {
+            "500": "253 153 40",
+        }
+    },
+}
+
+

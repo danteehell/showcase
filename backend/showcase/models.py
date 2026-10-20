@@ -1,5 +1,7 @@
 from django.db import models
 
+from backend import settings
+
 
 class Partner(models.Model):
     name=models.CharField(max_length=200,verbose_name="Партнёр")
@@ -104,7 +106,7 @@ class Project(models.Model):
     shedule = models.ForeignKey(ScheduleItem, on_delete=models.SET_NULL, verbose_name="Занятия", null=True, blank=True)
     difficulty=models.ForeignKey(FilterOption,on_delete=models.SET_NULL,null=True,blank=True,related_name="projects_as_difficulty",limit_choices_to={"category__category_type":"difficulty"},verbose_name="Сложность")
     partner=models.ForeignKey("Partner",on_delete=models.SET_NULL,null=True,blank=True,verbose_name="Партнёр")
-    curator=models.ForeignKey("Curator",on_delete=models.SET_NULL,null=True,blank=True,verbose_name="Куратор")
+    curator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,null=True,blank=True,limit_choices_to={'role': 'curator'},related_name='curated_projects',verbose_name="Куратор")
     internship=models.BooleanField(default=False,verbose_name="Стажировка", null=True, blank=True)
     spots_remaining=models.IntegerField(default=0,verbose_name="Оставшиеся места", null=True, blank=True)
     short_description=models.TextField(blank=True,verbose_name="Короткое описание", null=True)
