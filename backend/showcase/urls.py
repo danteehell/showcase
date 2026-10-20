@@ -9,6 +9,6 @@ router.register(r'partners', PartnerViewSet, basename='partners')
 
 urlpatterns = [
     path('projects/', ProjectListAPI.as_view(), name='project-list'),
-    path('projects/<int:pk>/', ProjectViewSet.as_view({'get': 'retrieve'}), name='project-detail'),
+    path('projects/<int:id>/', ProjectViewSet.as_view({'get': 'retrieve'}), name='project-detail'),
     path('', include(router.urls)),
 ]
