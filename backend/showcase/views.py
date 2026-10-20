@@ -77,8 +77,9 @@ class FiltersViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = FilterCategorySerializer
 
     def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        data = {cat['category_type']: cat for cat in response.data}
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = {cat['category_type']: cat for cat in serializer.data}
         return Response(data)
 
 
