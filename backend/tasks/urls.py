@@ -8,4 +8,6 @@ router.register(r'tasks', TasksView, basename='tasks')
 
 urlpatterns = [
     path('', include(router.urls)),
+    
+    path('filters/', TaskFiltersAPIView.as_view(), name='task-filters')
 ]

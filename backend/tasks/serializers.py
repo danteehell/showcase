@@ -25,3 +25,13 @@ class TasksSerializer(serializers.ModelSerializer):
 
     def get_category(self, obj):
         return obj.category.name if obj.category else None
+
+
+class TaskFiltersSerializer(serializers.Serializer):
+    categories = serializers.ListField()
+    projects = serializers.ListField()
+    points_min = serializers.DecimalField(max_digits=6, decimal_places=2)
+    points_max = serializers.DecimalField(max_digits=6, decimal_places=2)
+    deadline_min = serializers.DateTimeField()
+    deadline_max = serializers.DateTimeField()
+    difficulties = serializers.ListField()
