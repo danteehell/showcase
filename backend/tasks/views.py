@@ -1,36 +1,50 @@
-from django.shortcuts import render
-from rest_framework import viewsets, status, views
+from django.db.models import Min, Max
+from rest_framework import viewsets, views
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .models import *
-from .serializers import TasksSerializer, TaskFiltersSerializer
-from django.db.models import Min, Max
+
+from .models import Task, TaskCategory
+from showcase.models import Project
+from .serializers import TaskListSerializer, TaskDetailSerializer
 
 
-class TasksView(viewsets.ReadOnlyModelViewSet):
-    queryset = Task.objects.select_related("project", "category").all()
-    serializer_class = TasksSerializer
+class TaskViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return Task.objects.select_related("project", "category").filter(
+            status__in=[
+                Task.Status.PUBLISHED,
+                Task.Status.TAKEN,
+                Task.Status.IN_PROGRESS,
+            ]
+        )
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return TaskDetailSerializer
+        return TaskListSerializer
 
 
 class TaskFiltersAPIView(views.APIView):
+    permission_classes = [AllowAny]
 
-    def get(self, request, *args, **kwargs):
-
-        categories_qs = TaskCategory.objects.all()
-        categories = [{'id': c.id, 'name': c.name, 'slug': c.slug} for c in categories_qs]
-
-        projects_qs = Task.objects.select_related('project').values('project__id', 'project__name')
-
-        projects = [{'id': p["project__id"], 'name': p['project__name']} for p in projects_qs]
-
-        points = Task.objects.aggregate(points_min=Min('points'), points_max=Max('points'))
-
-        deadlines = Task.objects.aggregate(deadline_min=Min('deadline'), deadline_max=Max('deadline'))
-
+    def get(self, request):
+        categories = list(
+            TaskCategory.objects.values('id', 'name', 'slug')
+        )
+        projects = list(
+            Project.objects.values('id', 'title')
+        )
+        points = Task.objects.aggregate(
+            points_min=Min('points'), points_max=Max('points'),
+        )
+        deadlines = Task.objects.aggregate(
+            deadline_min=Min('deadline'), deadline_max=Max('deadline'),
+        )
         difficulties = [choice[0] for choice in Task.Difficulty.choices]
 
-        data = {
+        return Response({
             'categories': categories,
             'projects': projects,
             'points_min': points['points_min'] or 0,
@@ -38,7 +52,4 @@ class TaskFiltersAPIView(views.APIView):
             'deadline_min': deadlines['deadline_min'],
             'deadline_max': deadlines['deadline_max'],
             'difficulties': difficulties,
-        }
-
-        serializer = TaskFiltersSerializer(data)
-        return Response(serializer.data)
+        })

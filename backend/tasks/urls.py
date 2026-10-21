@@ -1,13 +1,11 @@
-from django.urls import path, include
-from .views import *
-from rest_framework import routers
+from django.urls import path
+from rest_framework.routers import SimpleRouter
 
-router = routers.DefaultRouter()
+from .views import TaskViewSet, TaskFiltersAPIView
 
-router.register(r'tasks', TasksView, basename='tasks')
+router = SimpleRouter()
+router.register(r"", TaskViewSet, basename="task")
 
 urlpatterns = [
-    path('', include(router.urls)),
-    
-    path('filters/', TaskFiltersAPIView.as_view(), name='task-filters')
-]
+    path("filters/", TaskFiltersAPIView.as_view(), name="task-filters"),
+] + router.urls
